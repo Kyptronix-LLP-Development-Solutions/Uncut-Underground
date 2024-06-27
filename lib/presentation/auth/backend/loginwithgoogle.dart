@@ -33,12 +33,14 @@ class GoogleSignInProvider {
 
       if (user != null) {
         // Add user details to Firestore collection
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-          'userId': user.uid,
-          'name': user.displayName,
-          'email': user.email,
-          // Add more fields as needed
-        });
+        // await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        //   'userId': user.uid,
+        //   'name': user.displayName,
+        //   'email': user.email,
+        //   'isSubscribed': false,
+        //   // Add more fields as needed
+        // });
+        createUserIfNotExists(user);
         customSnackBar(
           scaffoldMessenger,
           'Google login successful.',
@@ -71,4 +73,27 @@ class GoogleSignInProvider {
       await FirebaseAuth.instance.signOut();
     }
   }
+}
+
+Future<void> createUserIfNotExists(User user) async {
+  final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+
+  return FirebaseFirestore.instance.runTransaction((transaction) async {
+    final snapshot = await transaction.get(userRef);
+
+    if (!snapshot.exists) {
+      // Document doesn't exist, so create it
+      transaction.set(userRef, {
+        'userId': user.uid,
+        'name': user.displayName,
+        'email': user.email,
+        'isSubscribed': false,
+        // Add more fields as needed
+      });
+    } else {
+      // Document already exists, you can optionally update certain fields here
+      // For example:
+      // transaction.update(userRef, {'lastLoginDate': DateTime.now()});
+    }
+  });
 }

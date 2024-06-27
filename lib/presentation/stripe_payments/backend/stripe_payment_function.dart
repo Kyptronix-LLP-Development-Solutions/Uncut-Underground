@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart' hide Card;
 
@@ -32,15 +34,6 @@ class StripePaymentFunction {
 
       if (result != null) {
         debugPrint(result as String?);
-        // TODO: PAYMENT DETAILS
-        // print('\n\n\n\n\n\n');
-        // print('Wassup');
-        // await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-        //   'userId': user.uid,
-        //   'name': user.displayName,
-        //   'email': user.email,
-        //   // Add more fields as needed
-        // });
 
         // Handle initialization error.
         return;
@@ -71,6 +64,35 @@ class StripePaymentFunction {
       // Payment was successful.
 
       debugPrint('Payment successful');
+      // TODO: here is the change to be made
+      String? email = FirebaseAuth.instance.currentUser!.email;
+
+      await updateSubscriptionStatus(email!, true);
+    }
+  }
+
+  Future<void> updateSubscriptionStatus(String email, bool isSubscribed) async {
+    try {
+      // Query for the document with the matching email
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .where('email', isEqualTo: email)
+          .limit(1)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        // Get the first (and should be only) matching document
+        DocumentSnapshot userDoc = querySnapshot.docs.first;
+
+        // Update the isSubscribed field
+        await userDoc.reference.update({'isSubscribed': isSubscribed});
+
+        debugPrint('Subscription status updated successfully');
+      } else {
+        debugPrint('No user found with the provided email');
+      }
+    } catch (e) {
+      debugPrint('Error updating subscription status: $e');
     }
   }
 }

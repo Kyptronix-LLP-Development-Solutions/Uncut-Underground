@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
@@ -5,10 +6,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uncut_underground/common/text_widget.dart';
 // import 'package:uncut_underground/utils/theme/theme.dart';
 import 'package:social_login_buttons/social_login_buttons.dart';
-import 'package:uncut_underground/presentation/stripe_payments/frontend/flutter_stripe.dart';
+import 'package:uncut_underground/presentation/root/root_screen.dart';
 
 import '../../../common/loading_indicator.dart';
-import '../../root/root_screen.dart';
 import '../backend/loginwithgoogle.dart';
 import 'admin_login.dart';
 
@@ -116,9 +116,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                     // ignore: use_build_context_synchronously
                                     context,
                                     MaterialPageRoute(
-                                      // builder: (context) => const RootScreen(),
-                                      builder: (context) =>
-                                          const FlutterStripe(),
+                                      builder: (context) => const RootScreen(),
                                     ),
                                   );
                                 }
@@ -134,19 +132,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             ),
                           ),
                           const Gap(30.0),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.push(
-                                // ignore: use_build_context_synchronously
-                                context,
-                                MaterialPageRoute(
-                                  // builder: (context) => const RootScreen(),
-                                  builder: (context) => const FlutterStripe(),
-                                ),
-                              );
-                            },
-                            child: const Text('stripe'),
-                          ),
 
                           /* -------------------------------------------------------------------------- */
                           /*                           continue with facebook                           */

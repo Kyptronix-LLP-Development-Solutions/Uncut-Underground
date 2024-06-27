@@ -1,9 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uncut_underground/presentation/auth/frontend/login_page.dart';
+import 'package:uncut_underground/presentation/root/root_screen.dart';
 import 'package:uncut_underground/utils/theme/theme.dart';
-
-import 'presentation/auth/frontend/login_page.dart';
 
 final authStateProvider = StreamProvider<User?>((ref) {
   return FirebaseAuth.instance.authStateChanges();
@@ -27,7 +27,9 @@ class MyApp extends ConsumerWidget {
       themeMode:
           themeNotifier == Brightness.light ? ThemeMode.light : ThemeMode.dark,
       // home: const RootScreen(),
-      home: const LoginPage(),
+      home: (FirebaseAuth.instance.currentUser != null)
+          ? const RootScreen()
+          : const LoginPage(),
     );
   }
 }

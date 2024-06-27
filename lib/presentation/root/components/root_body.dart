@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -68,6 +69,24 @@ class _RootBodyState extends ConsumerState<RootBody>
     await FirebaseAuth.instance.signOut();
   }
 
+  Stream<bool> checkSubscriptionStatus(String? email) {
+    return FirebaseFirestore.instance
+        .collection('users')
+        .where('email', isEqualTo: email)
+        .limit(1)
+        .snapshots()
+        .map((snapshot) {
+      if (snapshot.docs.isNotEmpty) {
+        // User document found
+        var userData = snapshot.docs.first.data();
+        return userData['isSubscribed'] ?? false;
+      } else {
+        // No user document found
+        return false;
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = ref.watch(themeNotifierProvider) == Brightness.dark;
@@ -110,6 +129,7 @@ class _RootBodyState extends ConsumerState<RootBody>
                         await prefs.remove('counter');
                         _signOut();
                         Navigator.push(
+                          // ignore: use_build_context_synchronously
                           context,
                           MaterialPageRoute(
                             builder: (context) => const LoginPage(),
@@ -142,119 +162,133 @@ class _RootBodyState extends ConsumerState<RootBody>
                       child: Column(
                         children: [
                           const Gap(50.0),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.black,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                ),
-                              ),
-                              onPressed: () {
-                                // final liveId = generateRandomString(8);
-                                CustomPopupBox.show(
-                                  context,
-                                  CustomTextWidget01(
-                                    text: 'Enter Live ID',
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 24.0,
-                                    color:
-                                        isDark ? Colors.white : Colors.black54,
-                                  ),
-                                  TextField(
-                                    controller: _streamId,
-                                    keyboardType: TextInputType.text,
-                                    style: const TextStyle(
-                                      color: Colors.black,
-                                    ),
-                                    textCapitalization:
-                                        TextCapitalization.words,
-                                    decoration: InputDecoration(
-                                      border: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(8.0),
-                                        borderSide: BorderSide.none,
-                                      ),
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                        horizontal: 12.0,
-                                      ),
-                                      filled: true,
-                                      fillColor: Colors.grey[300],
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    width: 100.0,
-                                    child: ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.green.shade800,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8.0),
-                                        ),
-                                      ),
-                                      onPressed: () {
-                                        _joinLive(
-                                          _streamId.text.trim(),
-                                          // userFetchData!.name,
-                                          // userFetchData!.userId,
-                                          'John Doe',
-                                          'JohnDoe',
-                                          false,
-                                        );
-                                      },
-                                      child: const CustomTextWidget01(
-                                        text: 'Join',
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
-                              child: const CustomTextWidget01(
-                                text: 'Join a live stream',
-                                fontWeight: FontWeight.w500,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
+                          StreamBuilder<bool>(
+                            stream: checkSubscriptionStatus(
+                                FirebaseAuth.instance.currentUser!.email),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return const CircularProgressIndicator();
+                              }
 
-                          /* -------------------------------------------------------------------------- */
-                          /*                                     ---                                    */
-                          /* -------------------------------------------------------------------------- */
-                          // subscription button
-                          Container(
-                            width: double.infinity,
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 0.0),
-                            child: ElevatedButton(
-                              onPressed: () {
-                                StripePaymentFunction().makePayment('99');
-                              },
-                              style: ButtonStyle(
-                                backgroundColor: WidgetStateProperty.all<Color>(
-                                    Colors.black),
-                                shape: WidgetStateProperty.all<
-                                    RoundedRectangleBorder>(
-                                  RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12.0),
-                                  ),
-                                ),
-                              ),
-                              child: const Text(
-                                'Pay Now',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ),
+                              bool isSubscribed = snapshot.data ?? false;
+
+                              return isSubscribed
+                                  ? liveStreamButton(isDark)
+                                  : paymentButton(isDark);
+                            },
                           ),
                           const Gap(20.0),
-                          // const Divider(thickness: 3.0),
                         ],
                       ),
                     ),
                   ),
           ],
+        ),
+      ),
+    );
+  }
+
+/* -------------------------------------------------------------------------- */
+/*                             Live Stream Button                             */
+/* -------------------------------------------------------------------------- */
+
+  Widget liveStreamButton(bool isDark) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: isDark ? Colors.black : kPrimaryColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+        ),
+        onPressed: () {
+          // final liveId = generateRandomString(8);
+          CustomPopupBox.show(
+            context,
+            CustomTextWidget01(
+              text: 'Enter Live ID',
+              fontWeight: FontWeight.w800,
+              fontSize: 24.0,
+              color: isDark ? Colors.white : Colors.black54,
+            ),
+            TextField(
+              controller: _streamId,
+              keyboardType: TextInputType.text,
+              style: const TextStyle(
+                color: Colors.black,
+              ),
+              textCapitalization: TextCapitalization.words,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12.0,
+                ),
+                filled: true,
+                fillColor: Colors.grey[300],
+              ),
+            ),
+            SizedBox(
+              width: 100.0,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green.shade800,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                ),
+                onPressed: () {
+                  _joinLive(
+                    _streamId.text.trim(),
+                    // userFetchData!.name,
+                    // userFetchData!.userId,
+                    'John Doe',
+                    'JohnDoe',
+                    false,
+                  );
+                },
+                child: const CustomTextWidget01(
+                  text: 'Join',
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          );
+        },
+        child: const CustomTextWidget01(
+          text: 'Join a live stream',
+          fontWeight: FontWeight.w500,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+
+/* -------------------------------------------------------------------------- */
+/*                            Stripe Payment Button                           */
+/* -------------------------------------------------------------------------- */
+
+  Widget paymentButton(bool isDark) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 0.0),
+      child: ElevatedButton(
+        onPressed: () {
+          StripePaymentFunction().makePayment('99');
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: isDark ? Colors.black : kPrimaryColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0),
+          ),
+        ),
+        child: const Text(
+          'Pay Now',
+          style: TextStyle(color: Colors.white),
         ),
       ),
     );

@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:uncut_underground/presentation/notification/send_topic_noti.dart';
 import 'package:uncut_underground/utils/theme/theme.dart';
 
 import '../../common/live_page.dart';
@@ -189,6 +190,10 @@ class _RecordingsTabState extends ConsumerState<RecordingsTab> {
                               ),
                             ),
                             onPressed: () {
+                              NotificationService().sendNotificationToTopic(
+                                  topic: 'topic',
+                                  title: 'Live Stream Started',
+                                  body: 'Use $liveId to join the Stream');
                               _joinLive(
                                 liveId,
                                 'admin',
@@ -250,9 +255,29 @@ class _RecordingsTabState extends ConsumerState<RecordingsTab> {
                                 fontSize: 14.0,
                               ),
                               children: [
-                                CustomTextWidget02(
-                                  text: data['email'] ?? 'Email not available',
-                                  fontSize: 14.0,
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 16.0),
+                                  child: Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        CustomTextWidget02(
+                                          text: data['email'] ??
+                                              'Email not available',
+                                          fontSize: 14.0,
+                                        ),
+                                        CustomTextWidget02(
+                                          // text: 'Subscription Status: ${data['isSubscribed'].toString()}',
+                                          text: (data['isSubscribed'] == true)
+                                              ? 'Subscription Status: Subscribed'
+                                              : 'Subscription Status: Yet to Subscribe',
+                                          fontSize: 14.0,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),

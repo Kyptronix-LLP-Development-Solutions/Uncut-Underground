@@ -1,1 +1,2 @@
 flutter build appbundle --no-tree-shake-icons
+flutter build apk --no-tree-shake-icons
