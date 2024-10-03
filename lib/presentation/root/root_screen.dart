@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uncut_underground/utils/theme/theme.dart';
+import '../chat/chat_contacts/chat_contact.dart';
 import 'components/root_body.dart';
 
 class RootScreen extends ConsumerWidget {
@@ -9,7 +11,7 @@ class RootScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return const SafeArea(
+    return SafeArea(
       child: Scaffold(
         // appBar: AppBar(
         //   titleSpacing: 0.0,
@@ -23,7 +25,25 @@ class RootScreen extends ConsumerWidget {
         //   ),
         //   actions: [ThemeToggle(ref: ref)],
         // ),
-        body: RootBody(),
+        body: const RootBody(),
+        floatingActionButton: CircleAvatar(
+          backgroundColor: kPrimaryColor,
+          radius: 30.0,
+          child: IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ChatContact(),
+                ),
+              );
+            },
+            icon: const Icon(
+              Icons.chat,
+              color: Colors.white,
+            ),
+          ),
+        ),
         // body: LoginPage(),
       ),
     );
